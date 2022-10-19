@@ -31,9 +31,23 @@ class Usuario{
 
 }
 
-
+// Inicializacion del objeto
 const usuario1 = new Usuario("German","Zarkovich");
-usuario1.addBook({libro: "A la deriva", autor: "horacio Quiroga"});
+console.log(usuario1.getFullName())
 
-console.log(JSON.stringify(usuario1));
+
+usuario1.addBook({libro: "A la deriva", autor: "horacio Quiroga"});
 console.log(usuario1.libros[0].libro);
+
+
+usuario1.addMascota("yaris");
+console.log(usuario1.countMascotas())
+
+
+console.log(usuario1);
+
+
+
+
+
+
