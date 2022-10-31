@@ -1,104 +1,68 @@
 const fs = require('fs');
 
 class Contenedor {
-    
-    constructor(fileName) {
-        this.fileName = fileName;
-        this.objects = this.readData(this.fileName) || [];
-    }
-    
-    
-    //Generacion ID
-    
-    async generateId() {
-        try {
-            this.objects = await this.getAll() || [];
-            let maxId = this.objects.length;
-            this.objects.forEach(el => {
-                el.id > maxId ? maxId = el.id : maxId
-            })
-            return maxId + 1;
-        } catch (err) {
-            console.log(err);
-        }
-    }
-    
-    
-    //Guarda un objeto
-    
-    async save(obj) {
-        try {
-            const readFile = await this.getAll();
-            if (!readFile) {
-                obj.id = await this.generateId();
-                this.objects.push(obj);
-                this.writeData(this.objects);
-                return obj.id;
-            }
-            this.objects = readFile;
-            obj.id = await this.generateId();
-            this.objects.push(obj);
-            this.writeData(this.objects);
-            return obj.id;
-        } catch (err) {
-            console.log(err);
-        }
-    }
-    
-    
-    //Devuelve el objeto con el ID buscado
-    
-    async getById(id) {
-        try {
-            this.objects = await this.getAll();
-            const obj = this.objects.find(el => el.id === Number(id));
-            return obj ? obj : null;
-        } catch (err) {
-            console.log(err);
-        }
-    }
-    
-    
-    //Devuelve un array con los objetos presentes en el archivo
-    
-    async getAll() {
-        try {
-            const data = await this.readData(this.fileName);
-            return data;
-        } catch (err) {
-            console.log(err);
-        }
-    }
-    //Elimina del archivo el objeto con el ID buscado
-    async deleteById(id) {
-        try {
-            this.objects = await this.getAll();
-            this.objects = this.objects.filter(el => el.id != Number(id));
-            this.writeData(this.objects);
-        } catch (err) {
-            console.log(err);
-        }
-    }
-    
-    
-    //Elimina todos los objetos guardados en el archivo
-    
-    async deleteAll() {
-        try {
-            this.objects = await this.getAll();
-            this.objects = [];
-            this.writeData(this.objects);
-        } catch (err) {
-            console.log(err);
-        }
-    }
-    readData(path) {
-        const data = JSON.parse(fs.readFileSync(path, 'utf-8'));
-        return data;
-    }
-    writeData(objects) {
-        fs.writeFileSync(this.fileName, JSON.stringify(objects, null, 2));
-    }
+	constructor(filename) {
+		this.filename = filename;
+	}
+
+	save = async obj => {
+		const objs = await this.getAll();
+		try {
+			let newId;
+			objs.length === 0
+				? (newId = 1)
+				: (newId = objs[objs.length - 1].id + 1);
+			const newObj = { ...obj, id: newId };
+			objs.push(newObj);
+			await this.writeFile(objs);
+			return newObj.id;
+		} catch (error) {
+			console.log(error);
+		}
+	};
+
+	getById = async id => {
+		const objs = await this.getAll();
+		try {
+			const obj = objs.find(obj => obj.id === id);
+			return obj ? obj : null;
+		} catch (error) {
+			console.log(error.message);
+		}
+	};
+
+	getAll = async () => {
+		try {
+			const objs = await fs.promises.readFile(this.filename, 'utf-8');
+			return JSON.parse(objs);
+		} catch (error) {
+			if (error.message.includes('no such file or directory')) return [];
+			else console.log(error.message);
+		}
+	};
+
+	deleteById = async id => {
+		let objs = await this.getAll();
+		try {
+			objs = objs.filter(obj => obj.id != id);
+			await this.writeFile(objs);
+		} catch (error) {
+			console.log(error.message);
+		}
+	};
+
+	deleteAll = async () => await this.writeFile([]);
+
+	writeFile = async data => {
+		try {
+			await fs.promises.writeFile(
+				this.filename,
+				JSON.stringify(data, null, 2)
+			);
+		} catch (error) {
+			console.log(error.message);
+		}
+	};
 }
 
 module.exports = Contenedor;
